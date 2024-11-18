@@ -8,14 +8,12 @@ import (
 func main() {
 	mux := http.NewServeMux()
 
+	mux.Handle("/", http.FileServer(http.Dir(".")))
+
 	server := &http.Server{
 		Addr:    ":8080",
 		Handler: mux,
 	}
-
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.NotFound(w, r)
-	})
 
 	fmt.Println("Server running on http://localhost:8080")
 	if err := server.ListenAndServe(); err != nil {
