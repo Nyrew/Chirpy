@@ -17,9 +17,9 @@ func main() {
 	fileServer := http.FileServer(http.Dir("."))
 	mux.Handle("/app/", apiCfg.middlewareMetrianocsInc(http.StripPrefix("/app", fileServer)))
 
-	mux.HandleFunc("/healthz", handlerReadiness)
-	mux.HandleFunc("/metrics", apiCfg.handlerMetrics)
-	mux.HandleFunc("/reset", apiCfg.handlerReset)
+	mux.HandleFunc("GET /api/healthz", handlerReadiness)
+	mux.HandleFunc("GET /admin/metrics", apiCfg.handlerMetrics)
+	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
 
 	server := &http.Server{
 		Addr:    ":8080",
@@ -30,18 +30,4 @@ func main() {
 	if err := server.ListenAndServe(); err != nil {
 		fmt.Println("Error starting the server:", err)
 	}
-}
-
-func (cfg *apiConfig) middlewareMetrianocsInc(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileserverHits.Add(1) // Increment the counter
-		next.ServeHTTP(w, r)      // Call the next handler
-	})
-}
-
-func (cfg *apiConfig) handlerMetrics(w http.ResponseWriter, r *http.Request) {
-	count := cfg.fileserverHits.Load() // Safely read the counter
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("Hits: %d", count)))
 }
