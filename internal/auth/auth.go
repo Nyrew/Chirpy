@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net/http"
@@ -96,4 +98,27 @@ func GetBearerToken(headers http.Header) (string, error) {
 	}
 
 	return splitAuth[1], nil
+}
+
+func MakeRefreshToken() (string, error) {
+	token := make([]byte, 32)
+	_, err := rand.Read(token)
+	if err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(token), nil
+}
+
+func GetAPIKey(headers http.Header) (string, error) {
+	authHeader := headers.Get("Authorization")
+	if authHeader == "" {
+		return "", errors.New("authorization header is missing")
+	}
+
+	parts := strings.SplitN(authHeader, " ", 2)
+	if len(parts) != 2 || parts[0] != "ApiKey" {
+		return "", errors.New("invalid authorization header format")
+	}
+
+	return strings.TrimSpace(parts[1]), nil
 }
